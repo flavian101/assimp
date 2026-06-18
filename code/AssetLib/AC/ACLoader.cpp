@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -418,7 +418,7 @@ void AC3DImporter::ConvertMaterial(const Object &object,
 // ------------------------------------------------------------------------------------------------
 // Converts the loaded data to the internal verbose representation
 aiNode *AC3DImporter::ConvertObjectSection(Object &object,
-        MeshArray &meshes,
+        std::vector<aiMesh *> &meshes,
         std::vector<aiMaterial *> &outMaterials,
         const std::vector<Material> &materials,
         aiNode *parent) {
@@ -607,6 +607,10 @@ aiNode *AC3DImporter::ConvertObjectSection(Object &object,
                                 const Surface::SurfaceEntry &entry1 = src.entries[i];
                                 const Surface::SurfaceEntry &entry2 = src.entries[i + 1];
                                 const Surface::SurfaceEntry &entry3 = src.entries[i + 2];
+                                const unsigned int verticesNeeded = isDoubleSided ? 6 : 3;
+                                if (static_cast<unsigned>(vertices - mesh->mVertices) + verticesNeeded > mesh->mNumVertices) {
+                                    throw DeadlyImportError("AC3D: Invalid number of vertices");
+                                }
 
                                 aiFace &face = *faces++;
                                 face.mNumIndices = 3;
@@ -661,6 +665,10 @@ aiNode *AC3DImporter::ConvertObjectSection(Object &object,
                             unsigned int tmp = (unsigned int)(*it).entries.size();
                             if (Surface::OpenLine == type) --tmp;
                             for (unsigned int m = 0; m < tmp; ++m) {
+                                if (static_cast<unsigned>(vertices - mesh->mVertices) + 2 > mesh->mNumVertices) {
+                                    throw DeadlyImportError("AC3D: Invalid number of vertices");
+                                }
+
                                 aiFace &face = *faces++;
 
                                 face.mNumIndices = 2;
@@ -710,7 +718,7 @@ aiNode *AC3DImporter::ConvertObjectSection(Object &object,
                     std::unique_ptr<Subdivider> div(Subdivider::Create(Subdivider::CATMULL_CLARKE));
                     ASSIMP_LOG_INFO("AC3D: Evaluating subdivision surface: ", object.name);
 
-                    MeshArray cpy(meshes.size() - oldm, nullptr);
+                    std::vector<aiMesh *> cpy(meshes.size() - oldm, nullptr);
                     div->Subdivide(&meshes[oldm], cpy.size(), &cpy.front(), object.subDiv, true);
                     std::copy(cpy.begin(), cpy.end(), meshes.begin() + oldm);
 
@@ -846,7 +854,7 @@ void AC3DImporter::InternReadFile(const std::string &pFile,
     }
 
     mNumMeshes += (mNumMeshes >> 2u) + 1;
-    MeshArray meshes;
+    std::vector<aiMesh *> meshes;
     meshes.reserve(mNumMeshes);
 
     std::vector<aiMaterial *> omaterials;

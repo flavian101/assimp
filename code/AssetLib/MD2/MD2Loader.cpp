@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -143,6 +143,9 @@ void MD2Importer::ValidateHeader( )
     // check some values whether they are valid
     if (0 == m_pcHeader->numFrames)
         throw DeadlyImportError( "Invalid MD2 file: NUM_FRAMES is 0");
+
+    if (0 == m_pcHeader->numVertices)
+        throw DeadlyImportError( "Invalid MD2 file: NUM_VERTICES is 0");
 
     if (m_pcHeader->offsetEnd > (uint32_t)fileSize)
         throw DeadlyImportError( "Invalid MD2 file: File is too small");

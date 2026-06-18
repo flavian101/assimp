@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -121,7 +121,7 @@ void IRRMeshImporter::InternReadFile(const std::string &pFile,
 
     // final data
     std::vector<aiMaterial *> materials;
-    MeshArray meshes;
+    std::vector<aiMesh *> meshes;
     materials.reserve(5);
     meshes.reserve(5);
 

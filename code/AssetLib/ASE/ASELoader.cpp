@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -162,7 +162,7 @@ void ASEImporter::InternReadFile(const std::string &pFile,
 
         // process all meshes
         bool tookNormals = false;
-        MeshArray avOutMeshes;
+        std::vector<aiMesh *> avOutMeshes;
         avOutMeshes.reserve(mParser->m_vMeshes.size() * 2);
         for (std::vector<ASE::Mesh>::iterator i = mParser->m_vMeshes.begin(); i != mParser->m_vMeshes.end(); ++i) {
             if ((*i).bSkip) {
@@ -187,8 +187,10 @@ void ASEImporter::InternReadFile(const std::string &pFile,
         // Now build the output mesh list. Remove dummies
         pScene->mNumMeshes = (unsigned int)avOutMeshes.size();
         aiMesh **pp = pScene->mMeshes = new aiMesh *[pScene->mNumMeshes];
-        for (MeshArray::const_iterator i = avOutMeshes.begin(); i != avOutMeshes.end(); ++i) {
+        for (std::vector<aiMesh *>::const_iterator i = avOutMeshes.begin(); i != avOutMeshes.end(); ++i) {
             if (!(*i)->mNumFaces) {
+                (*i)->mColors[2] = nullptr;
+                delete *i;
                 continue;
             }
             *pp++ = *i;
@@ -573,8 +575,8 @@ void ASEImporter::AddNodes(const std::vector<BaseNode *> &nodes, aiNode *pcParen
             nd->mParent = node;
 
             // The .Target node is always the first child node
-            for (unsigned int m = 0; m < node->mNumChildren; ++m)
-                node->mChildren[m + 1] = node->mChildren[m];
+            for (unsigned int m = node->mNumChildren; m > 0; --m)
+                node->mChildren[m] = node->mChildren[m - 1];
 
             node->mChildren[0] = nd;
             node->mNumChildren++;
@@ -902,7 +904,7 @@ void ASEImporter::ConvertMaterial(ASE::Material &mat) {
 
 // ------------------------------------------------------------------------------------------------
 // Build output meshes
-void ASEImporter::ConvertMeshes(ASE::Mesh &mesh, MeshArray &avOutMeshes) {
+void ASEImporter::ConvertMeshes(ASE::Mesh &mesh, std::vector<aiMesh *> &avOutMeshes) {
     // validate the material index of the mesh
     if (mesh.iMaterialIndex >= mParser->m_vMaterials.size()) {
         mesh.iMaterialIndex = (unsigned int)mParser->m_vMaterials.size() - 1;
@@ -1270,5 +1272,4 @@ bool ASEImporter::GenerateNormals(ASE::Mesh &mesh) {
 }
 
 #endif // ASSIMP_BUILD_NO_3DS_IMPORTER
-
-#endif // !! ASSIMP_BUILD_NO_BASE_IMPORTER
+#endif // ASSIMP_BUILD_NO_ASE_IMPORTER

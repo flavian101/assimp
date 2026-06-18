@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------------------------------
 
-Copyright (c) 2006-2025, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -270,7 +270,7 @@ void Q3BSPFileImporter::CreateNodes(const Q3BSP::Q3BSPModel *pModel, aiScene *pS
     }
 
     unsigned int matIdx(0);
-    MeshArray MeshArray;
+    std::vector<aiMesh *> MeshArray;
     std::vector<aiNode *> NodeArray;
     for (FaceMapIt it = m_MaterialLookupMap.begin(); it != m_MaterialLookupMap.end(); ++it) {
         std::vector<Q3BSP::sQ3BSPFace *> *pArray = (*it).second;
@@ -597,8 +597,7 @@ bool Q3BSPFileImporter::importTextureFromArchive(const Q3BSP::Q3BSPModel *model,
             // If it doesn't exist in the archive, it is probably just a reference to an external file.
             // We'll leave it up to the user to figure out which extension the file has.
             aiString name;
-            strncpy(name.data, pTexture->strName, sizeof name.data);
-            name.length = static_cast<ai_uint32>(strlen(name.data));
+            name.Set(pTexture->strName, sizeof(name.data));
             pMatHelper->AddProperty(&name, AI_MATKEY_TEXTURE_DIFFUSE(0));
         }
     }
